@@ -9,20 +9,20 @@
     Section 5 in progress.
 */
 
-static const u32 ADR_COP   = 0x00FFE4;
-static const u32 ADR_BRK   = 0x00FFE6;
-static const u32 ADR_ABORT = 0x00FFE8;
-static const u32 ADR_NMI   = 0x00FFEA;
-static const u32 ADR_IRQ   = 0x00FFEE;
-
-static const u32 ADR_EMU_COP   = 0x00FFF4;
-static const u32 ADR_EMU_BRK   = 0x00FFFE;
-static const u32 ADR_EMU_ABORT = 0x00FFF8;
-static const u32 ADR_EMU_NMI   = 0x00FFFA;
-static const u32 ADR_EMU_RESET = 0x00FFFC;
-static const u32 ADR_EMU_IRQ   = 0x00FFFE;
-
 typedef struct cpu cpu;
+
+void cpu_initialize(cpu* myCpu);
+void cpu_reset(cpu* myCpu);
+
+void cpu_load_ROM(cpu* myCpu);
+void cpu_clock(cpu* myCpu);
+
+u16 cpu_read_16bit(cpu* myCpu, u32 address);
+u8 cpu_read_8bit(cpu* myCpu, u32 address);
+void cpu_write_16bit(cpu* myCpu, u32 address, u16 data);
+void cpu_write_8bit(cpu* myCpu, u32 address, u8 data);
+
+void cpu_register_all_op_codes(cpu* myCpu);
 
 typedef struct op_code {
     //A name for the op code
@@ -366,16 +366,3 @@ typedef struct cpu {
 
 } cpu;
 
-void cpu_reset(cpu* myCpu);
-
-void cpu_clock(cpu* myCpu);
-
-u16 cpu_read_16bit(cpu* myCpu, u32 address);
-u8 cpu_read_8bit(cpu* myCpu, u32 address);
-void cpu_write_16bit(cpu* myCpu, u32 address, u16 data);
-void cpu_write_8bit(cpu* myCpu, u32 address, u8 data);
-
-void cpu_initialize(cpu* myCpu);
-
-u8 addressing_mode_abs(cpu* myCpu);
-u8 operation_function_JMP(cpu* myCpu);
