@@ -1,6 +1,13 @@
 #include "cpu.h"
 
+//I have no words
+
 #pragma region Cycles count modes
+//These cycle count mode calculations are named arbitrarily.
+//They are necessary for accurate cycle calculations.
+//There are only 13 cycle calculation modes.
+//This may be refactored at some point, but it's functional as it is.
+
 //Absolute
 u8 cycle_count_mode_00(cpu* myCpu, u8 absolute, u8 page_boundary_crossed, u8 branch_taken)
 {
@@ -97,27 +104,6 @@ u8 cycle_count_mode_0D(cpu* myCpu, u8 absolute, u8 page_boundary_crossed, u8 bra
 //Length: 3 bytes, $OP $LL $HH 
 u8 addressing_mode_abs(cpu* myCpu)
 {
-    myCpu->program_counter++;
-    u8 LL = cpu_read_8bit(myCpu, myCpu->program_counter);
-
-    myCpu->program_counter++;
-    u8 HH = cpu_read_8bit(myCpu, myCpu->program_counter);
-
-    myCpu->destination_bank = myCpu->register_program_bank;
-
-    myCpu->destination_lo = LL;
-    
-    myCpu->destination_hi = HH;
-    
-
-    u32 data_address =
-        (myCpu->register_data_bank << 16) +
-        (HH << 8) +
-        LL;
-    
-    myCpu->fetched_data_lo = cpu_read_8bit(myCpu, data_address);
-    myCpu->fetched_data_hi = cpu_read_8bit(myCpu, data_address + 1);
-    
     return 0;
 }
 
@@ -125,20 +111,6 @@ u8 addressing_mode_abs(cpu* myCpu)
 //Length: 3 bytes, $OP $LL $HH
 u8 addressing_mode_abs_offset_x(cpu* myCpu)
 {
-    myCpu->program_counter++;
-    u8 LL = cpu_read_8bit(myCpu, myCpu->program_counter);
-
-    myCpu->program_counter++;
-    u8 HH = cpu_read_8bit(myCpu, myCpu->program_counter);
-
-    u32 data_address =
-        (myCpu->register_data_bank << 16) +
-        (HH << 8) +
-        LL + myCpu->register_x;
-
-    myCpu->fetched_data_lo = cpu_read_8bit(myCpu, data_address);
-    myCpu->fetched_data_hi = cpu_read_8bit(myCpu, data_address + 1);
-
     return 0;
 }
 
@@ -146,20 +118,6 @@ u8 addressing_mode_abs_offset_x(cpu* myCpu)
 //Length: 3 bytes, $OP $LL $HH
 u8 addressing_mode_abs_offset_y(cpu* myCpu)
 {
-    myCpu->program_counter++;
-    u8 LL = cpu_read_8bit(myCpu, myCpu->program_counter);
-
-    myCpu->program_counter++;
-    u8 HH = cpu_read_8bit(myCpu, myCpu->program_counter);
-
-    u32 data_address =
-        (myCpu->register_data_bank << 16) +
-        (HH << 8) +
-        LL + myCpu->register_y;
-
-    myCpu->fetched_data_lo = cpu_read_8bit(myCpu, data_address);
-    myCpu->fetched_data_hi = cpu_read_8bit(myCpu, data_address + 1);
-
     return 0;
 }
 
@@ -168,24 +126,6 @@ u8 addressing_mode_abs_offset_y(cpu* myCpu)
 //(absolute) addressing uses a 16-bit pointer.
 u8 addressing_mode_abs_16bit(cpu* myCpu)
 {
-    myCpu->program_counter++;
-    u8 LL = cpu_read_8bit(myCpu, myCpu->program_counter);
-
-    myCpu->program_counter++;
-    u8 HH = cpu_read_8bit(myCpu, myCpu->program_counter);
-
-    u32 data_address =
-        (0 << 16) +
-        (HH << 8) +
-        LL + myCpu->register_y;
-
-    myCpu->fetched_data_lo = cpu_read_8bit(myCpu, data_address);
-    myCpu->fetched_data_hi = cpu_read_8bit(myCpu, data_address + 1);
-
-    myCpu->destination_lo = myCpu->fetched_data_lo;
-    myCpu->destination_hi = myCpu->fetched_data_hi;
-    myCpu->destination_bank = myCpu->register_program_bank;
-
     return 0;
 }
 
@@ -194,25 +134,6 @@ u8 addressing_mode_abs_16bit(cpu* myCpu)
 //[absolute] addressing uses a 24-bit pointer.
 u8 addressing_mode_abs_24bit(cpu* myCpu)
 {
-    myCpu->program_counter++;
-    u8 LL = cpu_read_8bit(myCpu, myCpu->program_counter);
-
-    myCpu->program_counter++;
-    u8 HH = cpu_read_8bit(myCpu, myCpu->program_counter);
-
-    u32 data_address =
-        (0 << 16) +
-        (HH << 8) +
-        LL + myCpu->register_y;
-
-    myCpu->fetched_data_lo = cpu_read_8bit(myCpu, data_address);
-    myCpu->fetched_data_hi = cpu_read_8bit(myCpu, data_address + 1);
-    u8 fetched_data_bank = cpu_read_8bit(myCpu, data_address + 2);
-
-    myCpu->destination_lo = myCpu->fetched_data_lo;
-    myCpu->destination_hi = myCpu->fetched_data_hi;
-    myCpu->destination_bank = fetched_data_bank;
-
     return 0;
 }
 
@@ -221,24 +142,6 @@ u8 addressing_mode_abs_24bit(cpu* myCpu)
 //(absolute,X) addressing uses a 16-bit pointer
 u8 addressing_mode_abs_offset_x_bank(cpu* myCpu)
 {
-    myCpu->program_counter++;
-    u8 LL = cpu_read_8bit(myCpu, myCpu->program_counter);
-
-    myCpu->program_counter++;
-    u8 HH = cpu_read_8bit(myCpu, myCpu->program_counter);
-
-    u32 data_address =
-        (0 << 16) +
-        (HH << 8) +
-        LL + myCpu->register_x;
-
-    myCpu->fetched_data_lo = cpu_read_8bit(myCpu, data_address);
-    myCpu->fetched_data_hi = cpu_read_8bit(myCpu, data_address + 1);
-
-    myCpu->destination_lo = myCpu->fetched_data_lo;
-    myCpu->destination_hi = myCpu->fetched_data_hi;
-    myCpu->destination_bank = myCpu->register_program_bank;
-
     return 0;
 }
 
@@ -254,30 +157,6 @@ u8 addressing_mode_acc(cpu* myCpu)
 //Length: 2 bytes, $OP $LL 
 u8 addressing_mode_dir(cpu* myCpu)
 {
-    u8 OP = cpu_read_8bit(myCpu, myCpu->program_counter);
-    myCpu->program_counter++;
-    u8 LL = cpu_read_8bit(myCpu, myCpu->program_counter);
-
-    if(OP != 0xD4 && myCpu->flag_e == 1 && myCpu->register_dl == 0)
-    {
-        u32 data_address =
-            (0 << 16) +
-            (myCpu->register_dh << 8) +
-            LL;
-
-        myCpu->fetched_data_lo = cpu_read_8bit(myCpu, data_address);
-    }
-    else
-    {
-        u32 data_address =
-            (0 << 16) +
-            (myCpu->register_direct) +
-            LL;
-
-        myCpu->fetched_data_lo = cpu_read_8bit(myCpu, data_address);
-        myCpu->fetched_data_hi = cpu_read_8bit(myCpu, data_address + 1);
-    }
-
     return 0;
 }
 
@@ -285,29 +164,6 @@ u8 addressing_mode_dir(cpu* myCpu)
 //Length: 2 bytes, $OP $LL 
 u8 addressing_mode_dir_offset_x(cpu* myCpu)
 {
-    myCpu->program_counter++;
-    u8 LL = cpu_read_8bit(myCpu, myCpu->program_counter);
-
-    if(myCpu->flag_e == 1 && myCpu->register_dl == 0)
-    {
-        u32 data_address =
-            (0 << 16) +
-            (myCpu->register_dh << 8) +
-            LL + myCpu->register_x;
-
-        myCpu->fetched_data_lo = cpu_read_8bit(myCpu, data_address);
-    }
-    else
-    {
-        u32 data_address =
-            (0 << 16) +
-            (myCpu->register_direct) +
-            LL + myCpu->register_x;
-
-        myCpu->fetched_data_lo = cpu_read_8bit(myCpu, data_address);
-        myCpu->fetched_data_hi = cpu_read_8bit(myCpu, data_address + 1);
-    }
-
     return 0;
 }
 
@@ -315,29 +171,6 @@ u8 addressing_mode_dir_offset_x(cpu* myCpu)
 //Length: 2 bytes, $OP $LL 
 u8 addressing_mode_dir_offset_y(cpu* myCpu)
 {
-    myCpu->program_counter++;
-    u8 LL = cpu_read_8bit(myCpu, myCpu->program_counter);
-
-    if(myCpu->flag_e == 1 && myCpu->register_dl == 0)
-    {
-        u32 data_address =
-            (0 << 16) +
-            (myCpu->register_dh << 8) +
-            LL + myCpu->register_y;
-
-        myCpu->fetched_data_lo = cpu_read_8bit(myCpu, data_address);
-    }
-    else
-    {
-        u32 data_address =
-            (0 << 16) +
-            (myCpu->register_direct) +
-            LL + myCpu->register_y;
-
-        myCpu->fetched_data_lo = cpu_read_8bit(myCpu, data_address);
-        myCpu->fetched_data_hi = cpu_read_8bit(myCpu, data_address + 1);
-    }
-
     return 0;
 }
 
@@ -416,151 +249,189 @@ u8 addressing_mode_stk_s_y(cpu* myCpu)
 #pragma region operation functions
 u8 operation_function_ADC(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_AND(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_ASL(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_BCC(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_BCS(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_BEQ(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_BIT(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_BMI(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_BNE(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_BPL(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_BRA(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_BRK(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_BRL(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_BVC(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_BVS(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
+//Clears the c flag
 u8 operation_function_CLC(cpu* myCpu)
 {
+    myCpu->flag_c = 0;
+    myCpu->program_counter++;
     return 0;
 }
 
+//Clears the d flag
 u8 operation_function_CLD(cpu* myCpu)
 {
+    myCpu->flag_d = 0;
+    myCpu->program_counter++;
     return 0;
 }
 
+//Clears the i flag
 u8 operation_function_CLI(cpu* myCpu)
 {
+    myCpu->flag_i = 0;
+    myCpu->program_counter++;
     return 0;
 }
 
+//Clears the v flag
 u8 operation_function_CLV(cpu* myCpu)
 {
+    myCpu->flag_v = 0;
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_CMP(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_COP(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_CPX(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_CPY(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_DEC(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_DEX(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_DEY(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_EOR(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_INC(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_INX(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_INY(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
@@ -573,329 +444,406 @@ u8 operation_function_JMP(cpu* myCpu)
 
 u8 operation_function_JSL(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_JSR(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_LDA(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_LDX(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_LDY(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_LSR(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_MVN(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_MVP(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_NOP(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_ORA(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_PEA(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_PEI(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_PER(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_PHA(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_PHB(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_PHD(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_PHK(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_PHP(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_PHX(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_PHY(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_PLA(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_PLB(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_PLD(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_PLP(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_PLX(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_PLY(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
+//REset Processor status bits
 u8 operation_function_REP(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_ROL(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_ROR(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_RTI(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_RTL(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_RTS(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_SBC(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
+//Sets the c flag
 u8 operation_function_SEC(cpu* myCpu)
 {
+    myCpu->flag_c = 1;
+    myCpu->program_counter++;
     return 0;
 }
 
+//Sets the d flag
 u8 operation_function_SED(cpu* myCpu)
 {
+    myCpu->flag_d = 1;
+    myCpu->program_counter++;
     return 0;
 }
 
+//Sets the i flag
 u8 operation_function_SEI(cpu* myCpu)
 {
+    myCpu->flag_i = 1;
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_SEP(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_STA(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_STP(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_STX(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_STY(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_STZ(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_TAX(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_TAY(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_TCD(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_TCS(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_TDC(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_TRB(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_TSB(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_TSC(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_TSX(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_TXA(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_TXS(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_TXY(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_TYA(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_TYX(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_WAI(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_WDM(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
 u8 operation_function_XBA(cpu* myCpu)
 {
+    myCpu->program_counter++;
     return 0;
 }
 
+//Exchange Carry and Emulation flags
 u8 operation_function_XCE(cpu* myCpu)
 {
+    u8 temp = myCpu->flag_c;
+    myCpu->flag_c = myCpu->flag_x;
+    myCpu->flag_x = temp;
+    myCpu->program_counter++;
     return 0;
 }
 
 #pragma endregion
 
+#pragma region Op code registration
+//Registers an op code
 void cpu_register_op_code(
     cpu* myCpu,
     u16 opcode,
     const char* name,
-    u8 (*addressing_mode)(cpu* myCpu),
-    u8 (*operation_function_pointer)(cpu* myCpu),
-    u8 (*operation_cycles)(cpu* myCpu, u8 absolute, u8 page_boundary_crossed, u8 branch_taken),
-    u8 cycles,
-    u8 length,
+    u8 (*addressing_mode_func_ptr)(cpu* myCpu),
+    u8 (*operation_func_ptr)(cpu* myCpu),
+    u8 (*cycles_calculation_func_ptr)(cpu* myCpu, u8 absolute, u8 page_boundary_crossed, u8 branch_taken),
+    u8 base_cycles,
+    u8 base_length,
     u8 length_mode
     )
 {
+    //Create an op code and assign all the information
     op_code myOp_code;
     myOp_code.instruction_name = name;
-    myOp_code.addressing_mode = addressing_mode;
-    myOp_code.operation_function_pointer = operation_function_pointer;
-    myOp_code.operation_cycles = operation_cycles;
-    myOp_code.cycles = cycles;
-    myOp_code.length = length;
+    myOp_code.addressing_mode_func_ptr = addressing_mode_func_ptr;
+    myOp_code.operation_func_ptr = operation_func_ptr;
+    myOp_code.cycles_calculation_func_ptr = cycles_calculation_func_ptr;
+    myOp_code.base_cycles = base_cycles;
+    myOp_code.base_length = base_length;
     myOp_code.length_mode = length_mode;
+
+    //Store the op code in the CPU's registration of all op codes
     myCpu->op_codes[opcode] = myOp_code;
 }
 
+//Registers all op codes
 void cpu_register_all_op_codes(cpu* myCpu)
 {
     /*
@@ -1158,3 +1106,5 @@ void cpu_register_all_op_codes(cpu* myCpu)
     cpu_register_op_code(myCpu, 0xFE, "INC", addressing_mode_abs_offset_x     , operation_function_INC, cycle_count_mode_04, 9, 3, 0);
     cpu_register_op_code(myCpu, 0xFF, "SBC", addressing_mode_long_x           , operation_function_SBC, cycle_count_mode_08, 6, 4, 0);
 }
+
+#pragma endregion
