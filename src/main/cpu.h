@@ -20,8 +20,8 @@ void cpu_initialize(cpu* myCpu);
 //Called to reset the CPU to initial state
 void cpu_reset(cpu* myCpu);
 
-//Called to load ROM (from file?)
-void cpu_load_ROM(cpu* myCpu);
+//Called to load ROM from file
+void cpu_load_ROM(cpu* myCpu, const char* file_name);
 //Called in a loop to clock the CPU
 void cpu_clock(cpu* myCpu);
 

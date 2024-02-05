@@ -1,4 +1,6 @@
 #include "cpu.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 //The 65C816 uses these static address to determine where it should jump during some events,
 //such as a non-maskable interrupt, or a reset.
@@ -132,9 +134,32 @@ void cpu_clock(cpu* myCpu)
     myCpu->cycles--;
 }
 
-void cpu_load_ROM(cpu* myCpu)
+//This should probably be moved elsewhere.
+//In the furture, this function should be called with a pointer to a byte buffer instead of a file name
+void cpu_load_ROM(cpu* myCpu, const char* file_name)
 {
-    //TODO: Implement ROM loading.
+    FILE *file;
+    char *buffer;
+    long file_size;
+
+    //Open the file in binary mode
+    fopen_s(&file, file_name, "rb");
+
+    //Get the file size
+    fseek(file, 0, SEEK_END);
+    file_size = ftell(file);
+    rewind(file);
+
+    //Allocate memory for the byte array
+    buffer = (char*)malloc(file_size);
+
+    //Read the file into RAM
+    fread(myCpu->ram + 0x8000, 1, file_size, file);
+
+    //Close the file and free the allocated memory
+    fclose(file);
+    free(buffer);
+
     cpu_reset(myCpu);
 }
 

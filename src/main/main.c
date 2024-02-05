@@ -13,10 +13,7 @@ int main()
 
     cpu_initialize(myCpu);
 
-    cpu_load_ROM(myCpu);
-
-    //TODO: Remove
-    cpu_load_SMW(myCpu);
+    cpu_load_ROM(myCpu, "smw.smc");
 
     cpu_reset(myCpu);
 
