@@ -23,6 +23,40 @@ static const u32 ADR_EMU_NMI   = 0x00FFFA;
 static const u32 ADR_EMU_RESET = 0x00FFFC;
 static const u32 ADR_EMU_IRQ   = 0x00FFFE;
 
+u16 read_accumulator(cpu* myCpu)
+{
+    if(myCpu->flag_m)
+        return myCpu->accumulator_a;
+    else
+        return myCpu->accumulator_c;
+}
+
+u16 read_x_register(cpu* myCpu)
+{
+    if(myCpu->flag_x)
+        return myCpu->register_x_l;
+    else
+        return myCpu->register_x;
+}
+
+void cpu_flags_set(cpu* myCpu, u16 flag_mask)
+{
+    if(flag_mask && flag_mask_e)
+    {
+        myCpu->flag_e = 1;
+    }
+
+    myCpu->register_processor_status |= flag_mask;
+}
+
+void cpu_flags_reset(cpu* myCpu, u16 flag_mask)
+{
+    if(flag_mask && flag_mask_e)
+        myCpu->flag_e = 0;
+
+    myCpu->register_processor_status &= ~flag_mask;
+}
+
 void cpu_initialize(cpu* myCpu)
 {
     cpu_register_all_op_codes(myCpu);
@@ -38,8 +72,8 @@ void cpu_reset(cpu* myCpu)
     myCpu->register_direct = 0;
     myCpu->register_processor_status = 0;
     myCpu->flag_emulation_mode = 1; //Emulation mode is always switched on during reset
-    myCpu->flag_m = 1;
-    myCpu->flag_x = 1;
+    myCpu->flag_m = 1; //Therefore flag_m is set
+    myCpu->flag_x = 1; //As well as flag_x
     myCpu->stack_pointer = 0;
     myCpu->register_x = 0;
     myCpu->register_y = 0;

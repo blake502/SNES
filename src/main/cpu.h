@@ -43,6 +43,26 @@ void cpu_register_all_op_codes(cpu* myCpu);
 //TODO: This should not be in the header
 u8 cpu_get_instruction_length(cpu* myCpu, u8 base_length, u8 length_mode);
 
+//Sets a CPU flag
+void cpu_flags_set(cpu* myCpu, u16 flag_mask);
+//Resets a CPU flag
+void cpu_flags_reset(cpu* myCpu, u16 flag_mask);
+
+u16 read_accumulator(cpu* myCpu);
+
+//CPU Flag masks
+enum flag_mask{
+    flag_mask_n = 0b00000001,
+    flag_mask_v = 0b00000010,
+    flag_mask_m = 0b00000100,
+    flag_mask_x = 0b00001000,
+    flag_mask_d = 0b00010000,
+    flag_mask_i = 0b00100000,
+    flag_mask_z = 0b01000000,
+    flag_mask_c = 0b10000000,
+    flag_mask_e = 0b100000000
+};
+
 //Op code
 //Op codes contain several things:
 //A name for the operation EX: "JMP"
