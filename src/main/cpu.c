@@ -23,6 +23,9 @@ static const u32 ADR_EMU_NMI   = 0x00FFFA;
 static const u32 ADR_EMU_RESET = 0x00FFFC;
 static const u32 ADR_EMU_IRQ   = 0x00FFFE;
 
+//The term "accumulator" without any additional qualifiers means the 16-bit accumulator
+//(i.e. the C accumulator) when the m flag is 0, and the 8-bit accumulator (i.e. the A accumulator)
+//when the m flag is 1.
 u16 read_accumulator(cpu* myCpu)
 {
     if(myCpu->flag_m)
@@ -31,6 +34,10 @@ u16 read_accumulator(cpu* myCpu)
         return myCpu->accumulator_c;
 }
 
+//Although "X register" and "Y register" refer to the 16-bit registers, when the x flag is 1,
+//they are equivalent to the XL and YL registers, since the XH and YH register are forced to $00 when the x flag is 1.
+//In effect, "X register" means the 16-bit register when the x flag is 0, and the 8-bit register (i.e. the XL register)
+//when the x flag is 1. Likewise for "Y register".
 u16 read_x_register(cpu* myCpu)
 {
     if(myCpu->flag_x)
@@ -39,14 +46,78 @@ u16 read_x_register(cpu* myCpu)
         return myCpu->register_x;
 }
 
+//Although "X register" and "Y register" refer to the 16-bit registers, when the x flag is 1,
+//they are equivalent to the XL and YL registers, since the XH and YH register are forced to $00 when the x flag is 1.
+//In effect, "X register" means the 16-bit register when the x flag is 0, and the 8-bit register (i.e. the XL register)
+//when the x flag is 1. Likewise for "Y register".
+u16 read_y_register(cpu* myCpu)
+{
+    if(myCpu->flag_x)
+        return myCpu->register_y_l;
+    else
+        return myCpu->register_y;
+}
+
+//When the e flag is 1, the SH register is forced to $01
+u16 read_stack_pointer(cpu* myCpu)
+{
+    if(myCpu->flag_e)
+        return (0x01 >> 8) + myCpu->stack_pointer_l;
+    else
+        return myCpu->stack_pointer;
+}
+
+//The term "accumulator" without any additional qualifiers means the 16-bit accumulator
+//(i.e. the C accumulator) when the m flag is 0, and the 8-bit accumulator (i.e. the A accumulator)
+//when the m flag is 1.
+void write_accumulator(cpu* myCpu, u16 value)
+{
+    myCpu->accumulator_c = value;
+    if(myCpu->flag_emulation_mode)
+        myCpu->accumulator_b = 0x00;
+}
+
+//Although "X register" and "Y register" refer to the 16-bit registers, when the x flag is 1,
+//they are equivalent to the XL and YL registers, since the XH and YH register are forced to $00 when the x flag is 1.
+//In effect, "X register" means the 16-bit register when the x flag is 0, and the 8-bit register (i.e. the XL register)
+//when the x flag is 1. Likewise for "Y register". 
+void write_x_register(cpu* myCpu, u16 value)
+{
+    myCpu->register_x = value;
+    if(myCpu->flag_x)
+        myCpu->register_x_h = 0x00;
+}
+
+//Although "X register" and "Y register" refer to the 16-bit registers, when the x flag is 1,
+//they are equivalent to the XL and YL registers, since the XH and YH register are forced to $00 when the x flag is 1.
+//In effect, "X register" means the 16-bit register when the x flag is 0, and the 8-bit register (i.e. the XL register)
+//when the x flag is 1. Likewise for "Y register".
+void write_y_register(cpu* myCpu, u16 value)
+{
+    myCpu->register_x = value;
+    if(myCpu->flag_x)
+        myCpu->register_x_h = 0x00;
+}
+
 void cpu_flags_set(cpu* myCpu, u16 flag_mask)
 {
+    myCpu->register_processor_status |= (u8)flag_mask;
+
+    //When the e flag is 1, the SH register is forced to $01, the m flag is forced to 1, and the x flag is forced to 1.
     if(flag_mask && flag_mask_e)
     {
         myCpu->flag_e = 1;
+        myCpu->stack_pointer_h = 0x01;
+        myCpu->flag_m = 1;
+        myCpu->flag_x = 1;
     }
 
-    myCpu->register_processor_status |= flag_mask;
+    //The XH and YH register are forced to $00 when the x flag is 1.
+    if(myCpu->flag_x)
+    {
+        myCpu->register_x_h = 0x00;
+        myCpu->register_y_h = 0x00;
+    }
 }
 
 void cpu_flags_reset(cpu* myCpu, u16 flag_mask)
@@ -55,6 +126,18 @@ void cpu_flags_reset(cpu* myCpu, u16 flag_mask)
         myCpu->flag_e = 0;
 
     myCpu->register_processor_status &= ~flag_mask;
+}
+
+//When the e flag is 1, the SH register is forced to $01
+void write_stack_pointer(cpu* myCpu, u16 value)
+{
+    if(myCpu->flag_e)
+    {
+        myCpu->stack_pointer_l = value;
+        myCpu->stack_pointer_h = 0x01;
+    }
+    else
+        myCpu->stack_pointer_l = value;
 }
 
 void cpu_initialize(cpu* myCpu)
@@ -140,6 +223,7 @@ void cpu_clock(cpu* myCpu)
         u8 instruction_length = cpu_get_instruction_length(myCpu, op.base_length, op.length_mode);
 
         //Read extra bytes if the instruction length is greater than one.
+        //TODO: Accurate bank wrapping
         if(instruction_length >= 2)
             myCpu->current_LL = cpu_read_8bit(myCpu, ++myCpu->program_counter);
         if(instruction_length >= 3)

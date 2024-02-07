@@ -49,6 +49,14 @@ void cpu_flags_set(cpu* myCpu, u16 flag_mask);
 void cpu_flags_reset(cpu* myCpu, u16 flag_mask);
 
 u16 read_accumulator(cpu* myCpu);
+u16 read_x_register(cpu* myCpu);
+u16 read_y_register(cpu* myCpu);
+u16 read_stack_pointer(cpu* myCpu);
+
+void write_accumulator(cpu* myCpu, u16 value);
+void write_x_register(cpu* myCpu, u16 value);
+void write_y_register(cpu* myCpu, u16 value);
+void write_stack_pointer(cpu* myCpu, u16 value);
 
 //CPU Flag masks
 enum flag_mask{

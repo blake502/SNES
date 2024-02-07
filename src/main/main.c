@@ -20,6 +20,7 @@ int main()
 
     //printf("TEST: %02x\n", 0b1111&(~0b01));
 
+    /*
     printf("Flags:\n");
     print_flags(myCpu);
     printf("Setting C and N and E flags\n");
@@ -30,11 +31,12 @@ int main()
     cpu_flags_reset(myCpu, flag_mask_c | flag_mask_n | flag_mask_e);
     printf("Flags:\n");
     print_flags(myCpu);
+    */
 
     //20 clock cycles
     for(int i = 0; i < 20; i++)
     {
-        //print_instruction(myCpu);
+        print_instruction(myCpu);
         cpu_clock(myCpu);
     }
 
